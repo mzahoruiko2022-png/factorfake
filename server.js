@@ -31,7 +31,7 @@ const GRADE_AGES = {
 
 app.use(express.json());
 app.get('/', (req, res) => res.redirect('/facts.html'));
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/chat', async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
