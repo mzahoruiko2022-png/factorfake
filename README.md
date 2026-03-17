@@ -46,16 +46,31 @@ Get a free API key at [console.anthropic.com](https://console.anthropic.com).
 ### 3. Run the server
 
 ```bash
+npm install
 npm start
 ```
 
 Open [http://localhost:3000/facts.html](http://localhost:3000/facts.html) in your browser.
+
+## Deploy to Vercel
+
+1. Push your code to GitHub.
+2. Import the repo in [Vercel](https://vercel.com).
+3. Add environment variables:
+   - `ANTHROPIC_API_KEY`
+   - `JWT_SECRET`
+   - `TURSO_DATABASE_URL` — create a free database at [turso.tech](https://turso.tech), then copy the URL
+   - `TURSO_AUTH_TOKEN` — from the same Turso dashboard
+4. Deploy. The game will be at `https://your-project.vercel.app/facts.html`.
 
 ## Project Structure
 
 ```
 ├── facts.html       # Main game (frontend)
 ├── server.js        # Express backend + Claude API + auth
+├── api/index.js     # Vercel serverless entry
+├── lib/db.js        # Database (Turso or local SQLite)
+├── vercel.json      # Vercel routing
 ├── package.json
 ├── .env.example     # Template for environment variables
 └── .gitignore
