@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fact or Fake?</title>
+  <script>if(localStorage.getItem("fof_theme")==="light")document.documentElement.classList.add("light-mode-pre");</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f; --border: #2e2e3e;
+      --accent: #7c6af7; --accent-glow: rgba(124,106,247,0.25);
+      --green: #34d399; --green-bg: rgba(52,211,153,0.12);
+      --red: #f87171;   --red-bg: rgba(248,113,113,0.12);
+      --yellow: #fbbf24; --yellow-bg: rgba(251,191,36,0.12);
+      --text: #f0f0f5; --muted: #7a7a9a; --radius: 16px;
+    }
+    html.light-mode-pre body, body.light-mode {
+      --bg: #f4f4f8; --surface: #ffffff; --surface2: #ebebf3; --border: #d0d0e0;
+      --accent: #6254e8; --accent-glow: rgba(98,84,232,0.18);
+      --green: #16a34a; --green-bg: rgba(22,163,74,0.12);
+      --red: #dc2626;   --red-bg: rgba(220,38,38,0.12);
+      --yellow: #d97706; --yellow-bg: rgba(217,119,6,0.12);
+      --text: #111118; --muted: #6b6b88;
+    }
+    html, body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); transition: background 0.25s, color 0.25s; }
+    body {
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; padding: 36px 16px 60px;
+      transition: padding-right 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    body.sidebar-open { padding-right: calc(320px + 16px); }
+
+    /* ── Screens ── */
+    .screen { width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .screen.hidden { display: none; }
+
+    /* ── Start screen ── */
+    .start-logo { text-align: center; }
+    .start-logo h1 {
+      font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 800; letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .start-logo p { color: var(--muted); font-size: 1rem; margin-top: 8px; }
+
+    .mode-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 14px; width: 100%; max-width: 620px; margin-bottom: 28px;
+    }
+    .mode-card {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 22px 20px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      position: relative; overflow: hidden; user-select: none;
+    }
+    .mode-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .mode-card.selected { border-color: var(--accent); background: rgba(124,106,247,0.1); }
+    .mode-card .mode-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+    .mode-card .mode-name { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+    .mode-card .mode-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+    .mode-card .mode-tag {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 2px 10px; font-size: 0.72rem; font-weight: 700; color: var(--muted);
+    }
+    .mode-card.selected .mode-tag { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+    .start-cat-label { font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; text-align: center; max-width: 620px; width: 100%; }
+    .cat-row { display: flex; gap: 8px; flex-wrap: nowrap; justify-content: center; width: 100%; max-width: 620px; margin-bottom: 28px; }
+    .cat-chip {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+      padding: 7px 13px; font-size: 0.8rem; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s; user-select: none; white-space: nowrap;
+    }
+    .cat-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .cat-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+    .start-btn {
+      width: 100%; max-width: 620px; padding: 16px; background: var(--accent); border: none;
+      color: #fff; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 1.05rem;
+      font-weight: 800; cursor: pointer; box-shadow: 0 0 30px var(--accent-glow);
+      transition: opacity 0.2s, transform 0.15s; letter-spacing: 0.01em;
+    }
+    .start-btn:hover { opacity: 0.88; transform: translateY(-2px); }
+
+    /* ── Game screen header ── */
+    .game-top {
+      width: 100%; max-width: 640px; display: flex;
+      align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 10px;
+    }
+    .game-mode-badge {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 100px;
+      padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--muted);
+    }
+    .quit-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 10px; padding: 7px 14px; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+    }
+    .quit-btn:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── Timer bar (Blitz) ── */
+    .timer-wrap { width: 100%; max-width: 640px; margin-bottom: 14px; position: relative; }
+    .timer-bar-bg {
+      height: 6px; background: var(--surface2); border-radius: 100px; overflow: hidden;
+    }
+    .timer-bar-fill {
+      height: 100%; border-radius: 100px; background: var(--accent);
+      transition: width 1s linear, background 0.5s;
+    }
+    @keyframes barFlash {
+      0%   { box-shadow: 0 0 0 0 rgba(52,211,153,0); background: var(--green); }
+      40%  { box-shadow: 0 0 8px 3px rgba(52,211,153,0.7); }
+      100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+    }
+    .timer-bar-fill.flash { animation: barFlash 0.6s ease forwards; }
+    @keyframes plusTwo {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-22px); }
+    }
+    .plus-two {
+      position: absolute; right: 0; top: -4px;
+      font-size: 0.8rem; font-weight: 800; color: var(--green);
+      pointer-events: none; animation: plusTwo 0.9s ease forwards;
+    }
+    .timer-label {
+      text-align: right; font-size: 0.82rem; font-weight: 700;
+      color: var(--muted); margin-top: 5px;
+    }
+
+    /* ── Sudden death lives ── */
+    .lives-row { width: 100%; max-width: 640px; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; }
+    .hearts { display: flex; gap: 6px; }
+    .heart {
+      font-size: 1.6rem; display: inline-block;
+      transition: transform 0.15s;
+    }
+    @keyframes heartBreak {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.3) rotate(-10deg); }
+      60%  { transform: scale(0.9) rotate(5deg); }
+      100% { transform: scale(1); }
+    }
+    @keyframes heartFade {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.3); }
+    }
+    .heart.breaking { animation: heartBreak 0.35s ease forwards; }
+    .heart.fading   { animation: heartFade  0.4s ease 0.35s forwards; }
+
+
+    /* ── Card ── */
+    .card {
+      width: 100%; max-width: 640px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px 30px 28px; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 240px; height: 240px; background: var(--accent-glow);
+      border-radius: 50%; filter: blur(70px); pointer-events: none;
+    }
+    .cat-badge {
+      display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 4px 14px; font-size: 0.78rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 20px;
+    }
+    .fact-area { min-height: 86px; display: flex; align-items: center; }
+    #factText { font-size: clamp(1.05rem, 2.4vw, 1.2rem); line-height: 1.7; font-weight: 500; }
+    #factText.loading { color: var(--muted); font-style: italic; }
+    .hint-row { margin-top: 16px; min-height: 20px; }
+    #hintText { font-size: 0.87rem; color: var(--muted); opacity: 0; transition: opacity 0.3s; }
+    #hintText.visible { opacity: 1; }
+
+    /* ── Bluff score badge ── */
+    .bluff-score-badge { position: relative; display: flex; align-items: baseline; gap: 3px; }
+    .bluff-score-badge #scorePts { font-size: 1.6rem; font-weight: 900; color: var(--text); line-height: 1; }
+    .bluff-pts-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+    .bluff-toast {
+      position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+      white-space: nowrap; font-size: 0.78rem; font-weight: 700; pointer-events: none;
+      animation: bluffToastAnim 1.6s ease forwards;
+    }
+    .bluff-toast.win  { color: var(--green); }
+    .bluff-toast.lose { color: var(--red); }
+    @keyframes bluffToastAnim {
+      0%   { opacity: 0; transform: translateX(-50%) translateY(4px); }
+      15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+      70%  { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-14px); }
+    }
+
+    /* ── Bluff Challenge ── */
+    .bluff-row { margin: 14px 0 4px; text-align: center; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .bluff-prompt { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+    .bluff-btns { display: flex; gap: 10px; justify-content: center; }
+    .bluff-btn { flex: 1; max-width: 220px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface2); cursor: pointer; font-size: 0.82rem; font-weight: 700; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .bluff-btn:hover { transform: translateY(-2px); }
+    .bluff-yes { border-color: var(--border); color: var(--muted); }
+    .bluff-yes:hover { background: rgba(250,204,21,0.08); color: var(--yellow); border-color: var(--yellow); }
+    .bluff-yes.bluff-selected { background: rgba(250,204,21,0.15); border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 0 2px var(--yellow); }
+    .bluff-no  { border-color: var(--border); color: var(--muted); }
+    .bluff-no:hover  { background: var(--surface); color: var(--text); border-color: var(--text); }
+    .bluff-no.bluff-selected  { background: var(--surface); border-color: var(--text); color: var(--text); box-shadow: 0 0 0 2px var(--text); }
+    .bluff-tag { font-size: 0.68rem; font-weight: 400; opacity: 0.75; }
+
+    .answer-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
+    .answer-btn {
+      padding: 15px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.14s;
+    }
+    .answer-btn:hover:not(:disabled) { background: var(--accent-glow); border-color: var(--accent); transform: translateY(-2px); }
+    .answer-btn:disabled { cursor: default; }
+    .answer-btn.correct-pick   { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+    .answer-btn.wrong-pick     { background: var(--red-bg);   border-color: var(--red);   color: var(--red);   }
+    .answer-btn.reveal-correct { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+    @keyframes shake {
+      0%{transform:translateX(0)}15%{transform:translateX(-7px)}30%{transform:translateX(7px)}
+      45%{transform:translateX(-5px)}60%{transform:translateX(5px)}75%{transform:translateX(-3px)}
+      90%{transform:translateX(3px)}100%{transform:translateX(0)}
+    }
+    @keyframes pop {
+      0%{transform:scale(1)}40%{transform:scale(1.05)}70%{transform:scale(0.97)}100%{transform:scale(1)}
+    }
+    @keyframes glowRed   { 0%,100%{box-shadow:0 0 0 rgba(248,113,113,0)} 40%{box-shadow:0 0 22px 6px rgba(248,113,113,0.55)} }
+    @keyframes glowGreen { 0%,100%{box-shadow:0 0 0 rgba(52,211,153,0)}  40%{box-shadow:0 0 22px 6px rgba(52,211,153,0.55)} }
+    .card.anim-wrong   { animation: shake 0.5s ease, glowRed   0.6s ease; outline: 2px solid var(--red); }
+    .card.anim-correct { animation: pop   0.4s ease, glowGreen 0.6s ease; outline: 2px solid var(--green); }
+
+    .feedback { display: none; margin-top: 18px; padding: 13px 16px; border-radius: 12px; font-size: 0.92rem; line-height: 1.5; }
+    .feedback.show    { display: block; }
+    .feedback.correct { background: var(--green-bg); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
+    .feedback.wrong   { background: var(--red-bg);   border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+
+    .action-row { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; gap: 12px; }
+    .hint-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 10px; padding: 10px 16px; font-family: 'Inter', sans-serif;
+      font-size: 0.87rem; font-weight: 600; cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .hint-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .hint-btn:disabled { opacity: 0.35; cursor: default; }
+    .next-btn {
+      background: var(--accent); border: none; color: #fff; border-radius: 10px;
+      padding: 11px 26px; font-family: 'Inter', sans-serif; font-size: 0.93rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 0 22px var(--accent-glow); transition: opacity 0.2s, transform 0.14s;
+    }
+    .next-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+    .next-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+    /* ── End screen ── */
+    .end-card {
+      width: 100%; max-width: 540px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 44px 36px; text-align: center; position: relative; overflow: hidden;
+    }
+    .end-card::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 260px; height: 260px; background: var(--accent-glow); border-radius: 50%; filter: blur(80px); pointer-events: none;
+    }
+    .end-icon { font-size: 3.5rem; margin-bottom: 14px; }
+    .end-title { font-size: 1.7rem; font-weight: 800; margin-bottom: 8px; }
+    .end-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 30px; }
+    .end-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+    .end-guest-banner {
+      margin-top: 18px; padding: 12px 16px; border-radius: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .end-signin-btn {
+      flex-shrink: 0; padding: 7px 14px; background: var(--accent); border: none; color: #fff;
+      border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .end-signin-btn:hover { opacity: 0.85; }
+    .end-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 10px; }
+    .end-stat .val { font-size: 1.6rem; font-weight: 800; }
+    .end-stat .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .end-stat.green .val { color: var(--green); }
+    .end-stat.red   .val { color: var(--red); }
+    .end-stat.blue  .val { color: var(--accent); }
+    .end-btns { display: flex; gap: 12px; }
+    .end-btn-primary {
+      flex: 1; padding: 13px; background: var(--accent); border: none; color: #fff;
+      border-radius: 11px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s; box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .end-btn-primary:hover { opacity: 0.88; }
+    .end-btn-secondary {
+      padding: 13px 20px; background: transparent; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 11px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: color 0.2s, border-color 0.2s;
+    }
+    .end-btn-secondary:hover { color: var(--text); border-color: var(--text); }
+
+    /* ── Chat FAB ── */
+    .chat-fab {
+      position: fixed; bottom: 28px; right: 28px; width: 52px; height: 52px;
+      border-radius: 50%; background: var(--accent); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(124,106,247,0.5); transition: transform 0.2s; z-index: 100;
+    }
+    .chat-fab:hover { transform: scale(1.1); }
+    .chat-fab svg { width: 24px; height: 24px; fill: #fff; }
+
+    /* ── Chat sidebar ── */
+    .chat-sidebar {
+      position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
+      background: var(--surface); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 200;
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+    }
+    .chat-sidebar.open { transform: translateX(0); }
+    .sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 18px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .sidebar-header h3 { font-size: 0.95rem; font-weight: 700; }
+    .sidebar-header p  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .close-btn {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; font-size: 1rem; transition: color 0.2s, border-color 0.2s; flex-shrink: 0;
+    }
+    .close-btn:hover { color: var(--text); border-color: var(--text); }
+    .sidebar-messages {
+      flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column;
+      gap: 10px; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .smsg { max-width: 88%; padding: 9px 13px; border-radius: 14px; font-size: 0.875rem; line-height: 1.5; word-break: break-word; }
+    .smsg.bot  { align-self: flex-start; background: var(--surface2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .smsg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+    .dots span {
+      display: inline-block; width: 5px; height: 5px; margin: 0 2px;
+      background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite ease-in-out;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-4px);opacity:1} }
+    .sidebar-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .sidebar-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 12px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.875rem; outline: none; transition: border-color 0.2s;
+    }
+    .sidebar-input:focus { border-color: var(--accent); }
+    .sidebar-input::placeholder { color: var(--muted); }
+    .sidebar-send {
+      background: var(--accent); border: none; color: #fff; border-radius: 10px;
+      padding: 9px 14px; font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .sidebar-send:hover { opacity: 0.85; }
+    .sidebar-send:disabled { opacity: 0.35; cursor: default; }
+
+    /* ── Menu top bar ── */
+    .menu-topbar {
+      width: 100%; max-width: 700px; display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center; margin-bottom: 32px; gap: 12px;
+    }
+    .menu-topbar .lb-btn { justify-self: end; }
+    .profile-btn {
+      display: flex; align-items: center; gap: 9px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+      padding: 7px 14px 7px 8px; cursor: pointer; transition: border-color 0.2s;
+    }
+    .profile-btn:hover { border-color: var(--accent); }
+    .profile-avatar { font-size: 1.4rem; line-height: 1; }
+    .profile-name { font-size: 0.85rem; font-weight: 700; color: var(--text); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-btn {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+      padding: 8px 16px; cursor: pointer; font-size: 0.85rem; font-weight: 700;
+      color: var(--muted); transition: border-color 0.2s, color 0.2s;
+    }
+    .lb-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 500;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 30px 28px; width: 100%; max-width: 440px; position: relative;
+      transform: translateY(16px); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 8px; width: 30px; height: 30px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; font-size: 0.95rem; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .modal-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 0.95rem; outline: none;
+      transition: border-color 0.2s; margin-bottom: 20px;
+    }
+    .modal-input:focus { border-color: var(--accent); }
+    .emoji-grid { margin-bottom: 22px; }
+    .emoji-grid-inner {
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 6px;
+    }
+    .avatar-section-label {
+      font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; margin: 10px 0 5px;
+    }
+    .emoji-opt {
+      position: relative; font-size: 1.5rem; text-align: center; padding: 6px; border-radius: 10px;
+      cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, background 0.15s;
+      line-height: 1; display: flex; align-items: center; justify-content: center;
+    }
+    .emoji-opt:not(.locked):hover { background: var(--surface2); }
+    .emoji-opt.selected { border-color: var(--accent); background: var(--accent-glow); }
+    .emoji-inner { display: block; }
+    .emoji-opt.locked { cursor: help; }
+    .emoji-opt.locked .emoji-inner { filter: grayscale(1); opacity: 0.35; }
+    .lock-icon { position: absolute; bottom: 0; right: 0; font-size: 0.6rem; line-height: 1; }
+
+    /* Lock tooltip */
+    .lock-tip {
+      position: absolute; z-index: 900; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 13px; font-size: 0.8rem; max-width: 220px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.3); pointer-events: none;
+      opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s;
+    }
+    .lock-tip.show { opacity: 1; transform: translateY(0); }
+
+    /* Unlock toast */
+    .unlock-toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface); border: 1px solid var(--accent); border-radius: 14px;
+      padding: 14px 20px; display: flex; align-items: center; gap: 14px; z-index: 1000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s, transform 0.3s;
+      font-size: 0.88rem; min-width: 240px;
+    }
+    .unlock-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .unlock-em { font-size: 2rem; line-height: 1; }
+    .unlock-name { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .modal-save {
+      width: 100%; padding: 12px; background: var(--accent); border: none; color: #fff;
+      border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .modal-save:hover { opacity: 0.88; }
+    .modal-save:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── Auth modal ── */
+    .auth-tabs { display: flex; gap: 6px; margin-bottom: 22px; }
+    .auth-tab {
+      flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .auth-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .auth-error {
+      font-size: 0.82rem; font-weight: 700; color: var(--red);
+      min-height: 18px; margin-bottom: 14px; margin-top: -14px;
+    }
+    /* ── Theme toggle ── */
+    .theme-row { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; margin-bottom: 4px; }
+    .theme-row-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .theme-toggle { display: flex; gap: 6px; background: var(--surface2); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+    .theme-opt {
+      flex: 1; padding: 6px 14px; border-radius: 7px; border: none;
+      background: transparent; color: var(--muted); font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .theme-opt.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+
+    .auth-logout-btn {
+      width: 100%; padding: 10px; margin-top: 10px; background: transparent;
+      border: 1px solid var(--border); color: var(--muted); border-radius: 10px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .auth-logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Leaderboard ── */
+    .lb-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .lb-tab {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 100px;
+      padding: 5px 14px; font-size: 0.8rem; font-weight: 700; color: var(--muted);
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .lb-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+    .lb-list { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    .lb-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+    }
+    .lb-rank { font-size: 0.85rem; font-weight: 800; color: var(--muted); width: 22px; text-align: center; flex-shrink: 0; }
+    .lb-rank.gold   { color: #fbbf24; }
+    .lb-rank.silver { color: #94a3b8; }
+    .lb-rank.bronze { color: #c2813a; }
+    .lb-avatar { font-size: 1.4rem; flex-shrink: 0; }
+    .lb-info { flex: 1; min-width: 0; }
+    .lb-pname { font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; }
+    .lb-mode-badge { font-size: 0.65rem; font-weight: 600; background: var(--surface2); color: var(--muted); border: 1px solid var(--border); border-radius: 20px; padding: 1px 7px; flex-shrink: 0; }
+    .lb-meta  { font-size: 0.75rem; color: var(--muted); }
+    .lb-score { font-size: 1rem; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+    .lb-empty { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 28px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════ AUTH MODAL ══ -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal">
+      <button class="modal-close" id="closeProfile">✕</button>
+
+      <!-- ── Logged-out view: Sign In / Sign Up tabs ── -->
+      <div id="authView">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabSignIn">Sign In</button>
+          <button class="auth-tab" id="tabSignUp">Sign Up</button>
+        </div>
+
+        <!-- Sign In -->
+        <div id="signInPane">
+          <div class="modal-label">Username</div>
+          <input class="modal-input" id="siUsername" type="text" placeholder="Your username…" autocomplete="username" />
+          <div class="modal-label">Password</div>
+          <input class="modal-input" id="siPassword" type="password" placeholder="Your password…" autocomplete="current-password" />
+          <div class="auth-error" id="siError"></div>
+          <button class="modal-save" id="signInBtn">Log In</button>
+        </div>
+
+        <!-- Sign Up -->
+        <div id="signUpPane" style="display:none">
+          <div class="modal-label">Username</div>
+          <input class="modal-input" id="suUsername" type="text" placeholder="Choose a username…" autocomplete="username" maxlength="25" />
+          <div class="modal-label">Avatar</div>
+          <div class="emoji-grid" id="emojiGridSignUp"></div>
+          <div class="modal-label">Password</div>
+          <input class="modal-input" id="suPassword" type="password" placeholder="Choose a password…" autocomplete="new-password" />
+          <div class="modal-label">Confirm Password</div>
+          <input class="modal-input" id="suConfirm" type="password" placeholder="Repeat password…" autocomplete="new-password" />
+          <div class="auth-error" id="suError"></div>
+          <button class="modal-save" id="signUpBtn">Create Account</button>
+        </div>
+
+        <!-- Theme toggle available to all users -->
+        <div class="theme-row" style="margin-top:18px">
+          <span class="theme-row-label">Theme</span>
+          <div class="theme-toggle" id="themeToggleAuth">
+            <button class="theme-opt" data-theme="dark">🌙 Dark</button>
+            <button class="theme-opt" data-theme="light">☀️ Light</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Logged-in view: Profile ── -->
+      <div id="profileView" style="display:none">
+        <div class="modal-title" id="profileViewTitle">Your Profile</div>
+        <div class="modal-label">Avatar</div>
+        <div class="emoji-grid" id="emojiGridProfile"></div>
+        <button class="modal-save" id="saveAvatarBtn">Save Avatar</button>
+        <div class="theme-row">
+          <span class="theme-row-label">Theme</span>
+          <div class="theme-toggle" id="themeToggle">
+            <button class="theme-opt" data-theme="dark">🌙 Dark</button>
+            <button class="theme-opt" data-theme="light">☀️ Light</button>
+          </div>
+        </div>
+        <button class="auth-logout-btn" id="logoutBtn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ LEADERBOARD MODAL ══ -->
+  <div class="modal-overlay" id="lbModal">
+    <div class="modal" style="max-width:480px">
+      <button class="modal-close" id="closeLb">✕</button>
+      <div class="modal-title">🏆 Leaderboard</div>
+      <div class="lb-tabs" id="lbTabs">
+        <div class="lb-tab active" data-lbmode="all">All</div>
+        <div class="lb-tab" data-lbmode="classic">Classic</div>
+        <div class="lb-tab" data-lbmode="blitz">Blitz</div>
+        <div class="lb-tab" data-lbmode="sudden">Sudden Death</div>
+        <div class="lb-tab" data-lbmode="bluff">Bluff</div>
+      </div>
+      <div class="lb-list" id="lbList"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ START SCREEN ══ -->
+  <div id="startScreen" class="screen">
+    <div class="menu-topbar">
+      <button class="profile-btn" id="profileBtn">
+        <span class="profile-avatar" id="menuAvatar">🙂</span>
+        <span class="profile-name"  id="menuName">Guest</span>
+      </button>
+      <div class="start-logo">
+        <h1>Fact or Fake?</h1>
+        <p>Pick a mode, pick a category, and put your knowledge to the test.</p>
+      </div>
+      <button class="lb-btn" id="lbOpenBtn">🏆 Leaderboard</button>
+    </div>
+
+    <div class="mode-grid" id="modeGrid">
+      <div class="mode-card selected" data-mode="classic">
+        <span class="mode-icon">♾️</span>
+        <div class="mode-name">Classic</div>
+        <div class="mode-desc">Endless questions at your own pace. No pressure.</div>
+        <span class="mode-tag">Chill</span>
+      </div>
+      <div class="mode-card" data-mode="blitz">
+        <span class="mode-icon">⚡</span>
+        <div class="mode-name">Blitz</div>
+        <div class="mode-desc">60 seconds. Answer as many as you can before time runs out.</div>
+        <span class="mode-tag">Timed</span>
+      </div>
+      <div class="mode-card" data-mode="sudden">
+        <span class="mode-icon">💀</span>
+        <div class="mode-name">Sudden Death</div>
+        <div class="mode-desc">3 lives. Lose them all and it's over. How far can you go?</div>
+        <span class="mode-tag">Hard</span>
+      </div>
+      <div class="mode-card" data-mode="bluff">
+        <span class="mode-icon">🎭</span>
+        <div class="mode-name">Bluff Challenge</div>
+        <div class="mode-desc">Answer, then bet on yourself for +2. Bluff wrong and lose a point.</div>
+        <span class="mode-tag">Risk</span>
+      </div>
+    </div>
+
+    <div class="start-cat-label">Choose a category</div>
+    <div class="cat-row" id="startCatRow">
+      <div class="cat-chip active" data-cat="random">🎲 Random</div>
+      <div class="cat-chip" data-cat="science">🔬 Science</div>
+      <div class="cat-chip" data-cat="history">📜 History</div>
+      <div class="cat-chip" data-cat="animals">🐾 Animals</div>
+      <div class="cat-chip" data-cat="space">🚀 Space</div>
+      <div class="cat-chip" data-cat="food">🍕 Food</div>
+    </div>
+
+    <button class="start-btn" id="startBtn">Start Game →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ GAME SCREEN ══ -->
+  <div id="gameScreen" class="screen hidden">
+
+    <!-- Timer bar (Blitz only) -->
+    <div class="timer-wrap" id="timerWrap" style="display:none">
+      <div class="timer-bar-bg"><div class="timer-bar-fill" id="timerFill"></div></div>
+      <div class="timer-label" id="timerLabel">60s</div>
+    </div>
+
+    <!-- Sudden death life -->
+    <div class="lives-row" id="livesRow" style="display:none">
+      <div class="hearts" id="heartsDisplay"></div>
+    </div>
+
+
+    <!-- Header row -->
+    <div class="game-top">
+      <div class="game-mode-badge" id="gameModeLabel">Classic</div>
+      <div class="bluff-score-badge" id="scoreBadge">
+        <span id="scorePts">0</span><span class="bluff-pts-label" id="scorePtsLabel"> pts</span>
+      </div>
+      <button class="quit-btn" id="quitBtn">✕ Quit</button>
+    </div>
+
+    <!-- Fact card -->
+    <div class="card" id="factCard">
+      <div class="cat-badge" id="catBadge">Loading…</div>
+      <div class="fact-area"><p id="factText" class="loading">Getting your first fact…</p></div>
+      <div class="hint-row"><p id="hintText"></p></div>
+      <div class="answer-buttons">
+        <button class="answer-btn" id="btnTrue"  disabled>✓  True</button>
+        <button class="answer-btn" id="btnFalse" disabled>✗  False</button>
+      </div>
+      <div class="bluff-row" id="bluffRow" style="display:none">
+        <p class="bluff-prompt">Feeling confident? Double down — or press Next to play it safe.</p>
+        <div class="bluff-btns">
+          <button class="bluff-btn bluff-yes" id="bluffYes">🎭 Bluff it! <span class="bluff-tag">+2 if right / −1 if wrong</span></button>
+          <button class="bluff-btn bluff-no"  id="bluffNo">🛡️ Play safe <span class="bluff-tag">+1 if right</span></button>
+        </div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="action-row">
+        <button class="hint-btn" id="hintBtn" disabled>💡 Hint</button>
+        <button class="next-btn" id="nextBtn" disabled>Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ END SCREEN ══ -->
+  <div id="endScreen" class="screen hidden">
+    <div class="end-card">
+      <div class="end-icon" id="endIcon">🏆</div>
+      <div class="end-title" id="endTitle">Game Over</div>
+      <div class="end-sub"  id="endSub">Here's how you did</div>
+      <div class="end-stats">
+        <div class="end-stat green"><div class="val" id="endCorrect">0</div><div class="lbl">Correct</div></div>
+        <div class="end-stat red">  <div class="val" id="endWrong">0</div>  <div class="lbl">Wrong</div></div>
+        <div class="end-stat blue"> <div class="val" id="endAcc">0%</div>   <div class="lbl">Accuracy</div></div>
+      </div>
+      <div class="end-btns">
+        <button class="end-btn-secondary" id="endMenuBtn">← Menu</button>
+        <button class="end-btn-primary"   id="endPlayAgainBtn">Play Again</button>
+      </div>
+      <div class="end-guest-banner" id="endGuestBanner" style="display:none">
+        <span>Sign in to save your score to the leaderboard</span>
+        <button class="end-signin-btn" id="endSignInBtn">Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ CHAT FAB ══ -->
+  <button class="chat-fab" id="chatFab" title="Ask about this fact">
+    <svg viewBox="0 0 24 24"><path d="M12 3C6.486 3 2 6.925 2 11.75c0 2.6 1.25 4.93 3.25 6.55L4 21l3.5-1.75A11.3 11.3 0 0 0 12 20.5c5.514 0 10-3.925 10-8.75S17.514 3 12 3zm1 13h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+  </button>
+  <div class="chat-sidebar" id="chatSidebar">
+    <div class="sidebar-header">
+      <div><h3>FactBot</h3><p>I won't spoil the answer until you guess</p></div>
+      <button class="close-btn" id="closeSidebar">✕</button>
+    </div>
+    <div class="sidebar-messages" id="sidebarMessages">
+      <div class="smsg bot">Hi! Ask me anything about the current fact or game!</div>
+    </div>
+    <div class="sidebar-input-row">
+      <input class="sidebar-input" id="sidebarInput" type="text" placeholder="Ask a question…" />
+      <button class="sidebar-send" id="sidebarSend">Send</button>
+    </div>
+  </div>
+
+  <script>
+  // ─────────────────────────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────────────────────────
+  function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function show(id){ document.getElementById(id).classList.remove("hidden"); }
+  function hide(id){ document.getElementById(id).classList.add("hidden"); }
+  function el(id)  { return document.getElementById(id); }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Audio
+  // ─────────────────────────────────────────────────────────────────
+  var audioCtx = null;
+  function getAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+
+  function playDing(){
+    var ctx=getAudio(), master=ctx.createGain();
+    master.connect(ctx.destination);
+    master.gain.setValueAtTime(0.28,ctx.currentTime);
+    master.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.4);
+    [523.25,659.25,783.99].forEach(function(f,i){
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(master);o.type="sine";o.frequency.value=f;
+      g.gain.setValueAtTime(0,ctx.currentTime);
+      g.gain.linearRampToValueAtTime(1,ctx.currentTime+0.015+i*0.01);
+      o.start(ctx.currentTime);o.stop(ctx.currentTime+1.4);
+    });
+  }
+  function playBuzz(){
+    var ctx=getAudio(),o=ctx.createOscillator(),flt=ctx.createBiquadFilter(),g=ctx.createGain();
+    o.connect(flt);flt.connect(g);g.connect(ctx.destination);
+    o.type="sawtooth";flt.type="lowpass";flt.frequency.value=800;
+    o.frequency.setValueAtTime(220,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(110,ctx.currentTime+0.45);
+    g.gain.setValueAtTime(0,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.35,ctx.currentTime+0.02);
+    g.gain.setValueAtTime(0.35,ctx.currentTime+0.3);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.5);
+  }
+
+  function triggerCardAnim(cls){
+    var card=el("factCard");
+    card.classList.remove("anim-correct","anim-wrong");
+    void card.offsetWidth;
+    card.classList.add(cls);
+    setTimeout(function(){ card.classList.remove(cls); },700);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────────────────────────
+  var selectedMode = "classic";
+  var selectedCat  = "random";
+  var currentFact  = null;
+  var answered     = false;
+  var scores       = { correct:0, wrong:0 };
+
+  // Blitz
+  var blitzTimer   = null;
+  var blitzSeconds = 60;
+
+  // Sudden Death
+  var suddenLives = 3;
+
+  // Bluff Challenge
+  var bluffPending     = false;   // waiting for bluff decision
+  var bluffUserAnswer  = null;    // the True/False the player locked in
+  var bluffChoice      = null;    // true = bluff, false = safe, null = undecided
+
+
+  // ─────────────────────────────────────────────────────────────────
+  // Start screen
+  // ─────────────────────────────────────────────────────────────────
+  el("modeGrid").addEventListener("click", function(e){
+    var card = e.target.closest(".mode-card");
+    if(!card) return;
+    document.querySelectorAll(".mode-card").forEach(function(c){ c.classList.remove("selected"); });
+    card.classList.add("selected");
+    selectedMode = card.dataset.mode;
+  });
+
+  el("startCatRow").addEventListener("click", function(e){
+    var chip = e.target.closest(".cat-chip");
+    if(!chip) return;
+    document.querySelectorAll("#startCatRow .cat-chip").forEach(function(c){ c.classList.remove("active"); });
+    chip.classList.add("active");
+    selectedCat = chip.dataset.cat;
+  });
+
+  el("startBtn").addEventListener("click", startGame);
+  el("quitBtn").addEventListener("click", function(){ stopBlitz(); showEndScreen(); });
+  el("endMenuBtn").addEventListener("click", goToMenu);
+  el("endPlayAgainBtn").addEventListener("click", startGame);
+  el("endSignInBtn").addEventListener("click", function(){
+    el("authView").style.display    = "";
+    el("profileView").style.display = "none";
+    el("siError").textContent = "";
+    el("suError").textContent = "";
+    el("siUsername").value = "";
+    el("siPassword").value = "";
+    el("tabSignIn").classList.add("active");
+    el("tabSignUp").classList.remove("active");
+    el("signInPane").style.display = "";
+    el("signUpPane").style.display = "none";
+    openModal("profileModal");
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Start / End game
+  // ─────────────────────────────────────────────────────────────────
+  function startGame(){
+    scores = { correct:0, wrong:0 };
+    answered = false;
+    gameStreak = 0;
+
+    hide("startScreen"); hide("endScreen");
+    show("gameScreen");
+
+    // Mode-specific setup
+    var modeNames = { classic:"♾️ Classic", blitz:"⚡ Blitz", sudden:"💀 Sudden Death", bluff:"🎭 Bluff Challenge" };
+    el("gameModeLabel").textContent = modeNames[selectedMode] || selectedMode;
+
+    el("timerWrap").style.display = selectedMode === "blitz"  ? "block" : "none";
+    el("livesRow").style.display  = selectedMode === "sudden" ? "flex"  : "none";
+    el("scorePtsLabel").textContent = selectedMode === "bluff" ? " pts" : " correct";
+    el("scorePts").textContent = "0";
+
+    if(selectedMode === "sudden"){
+      suddenLives = 3;
+      buildHearts();
+    }
+
+    if(selectedMode === "blitz"){
+      blitzSeconds = 60;
+      updateTimerUI();
+      blitzTimer = setInterval(function(){
+        blitzSeconds--;
+        updateTimerUI();
+        if(blitzSeconds <= 0){ stopBlitz(); showEndScreen(); }
+      }, 1000);
+    }
+
+    updateScoreUI();
+    loadFact();
+  }
+
+  function goToMenu(){
+    stopBlitz();
+    hide("gameScreen"); hide("endScreen");
+    show("startScreen");
+  }
+
+  function showEndScreen(){
+    stopBlitz();
+    hide("gameScreen");
+    show("endScreen");
+    // Show sign-in prompt only for guests
+    el("endGuestBanner").style.display = currentUser ? "none" : "flex";
+    var total = scores.correct + scores.wrong;
+    var acc   = total > 0 ? Math.round(scores.correct / total * 100) : 0;
+
+    // Update stats for unlock tracking
+    stats.gamesPlayed = (stats.gamesPlayed || 0) + 1;
+    stats.totalCorrect = (stats.totalCorrect || 0) + scores.correct;
+    if(!stats.categoriesPlayed) stats.categoriesPlayed = [];
+    if(stats.categoriesPlayed.indexOf(selectedCat) < 0) stats.categoriesPlayed.push(selectedCat);
+    if(!stats.modesPlayed) stats.modesPlayed = [];
+    if(stats.modesPlayed.indexOf(selectedMode) < 0) stats.modesPlayed.push(selectedMode);
+    if(selectedCat === "space")   stats.spaceCorrect   = (stats.spaceCorrect   || 0) + scores.correct;
+    if(selectedCat === "science") stats.scienceCorrect = (stats.scienceCorrect || 0) + scores.correct;
+    if(selectedMode === "blitz")  stats.bestBlitz = Math.max(stats.bestBlitz || 0, scores.correct);
+    stats.bestStreak = Math.max(stats.bestStreak || 0, gameStreak);
+    // Perfect game tracking (100% acc, min 10 questions)
+    if(total >= 10 && acc === 100){
+      stats.perfectGames = (stats.perfectGames || 0) + 1;
+      stats.bestAcc = 100; stats.bestAccTotal = total;
+    } else if(total >= 10 && acc >= (stats.bestAcc || 0)) { stats.bestAcc = acc; stats.bestAccTotal = total; }
+    else if(total >= 5 && acc > (stats.bestAcc || 0)) { stats.bestAcc = acc; stats.bestAccTotal = total; }
+    // Sudden Death: survived with all 3 hearts + 15+ correct
+    if(selectedMode === "sudden" && scores.wrong === 0 && scores.correct >= 15) stats.sdPerfectWin = true;
+    saveStats();
+    checkAndGrantUnlocks();
+    gameStreak = 0;
+    el("endCorrect").textContent = scores.correct;
+    el("endWrong").textContent   = scores.wrong;
+    el("endAcc").textContent     = acc + "%";
+
+    var icon, title, sub;
+    if(acc >= 90){ icon="🏆"; title="Outstanding!";    sub="You really know your facts."; }
+    else if(acc >= 70){ icon="🎉"; title="Nice Work!"; sub="Solid performance."; }
+    else if(acc >= 50){ icon="🤔"; title="Not Bad…";  sub="Could be better, could be worse."; }
+    else { icon="💀"; title="Ouch."; sub="Better luck next time!"; }
+
+    if(selectedMode === "sudden"){
+      icon="💔"; title="Out of lives!";
+      sub = scores.correct > 0
+        ? "You survived " + scores.correct + " question" + (scores.correct===1?"":"s") + " before running out of hearts."
+        : "Didn't even get one right. Rough start!";
+    }
+    if(selectedMode === "blitz"){
+      title = scores.correct + " correct in 60s!";
+      sub = "Accuracy: " + acc + "% — " + (scores.correct >= 15 ? "Blitz master!" : scores.correct >= 8 ? "Good speed!" : "Keep practicing!");
+    }
+    if(selectedMode === "bluff"){
+      icon  = scores.correct >= 10 ? "🎭" : scores.correct >= 5 ? "🃏" : "😅";
+      title = scores.correct + " pts on the bluff!";
+      sub = scores.correct >= 10 ? "Masterful risk-taking!" : scores.correct >= 5 ? "Decent bluffer!" : "The facts bluffed you harder than you bluffed them.";
+    }
+    el("endIcon").textContent  = icon;
+    el("endTitle").textContent = title;
+    el("endSub").textContent   = sub;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Blitz timer
+  // ─────────────────────────────────────────────────────────────────
+  function stopBlitz(){ if(blitzTimer){ clearInterval(blitzTimer); blitzTimer=null; } }
+
+  function updateTimerUI(){
+    var pct = (blitzSeconds / 60) * 100;
+    el("timerFill").style.width = pct + "%";
+    el("timerFill").style.background = blitzSeconds > 20 ? "var(--accent)" : blitzSeconds > 10 ? "var(--yellow)" : "var(--red)";
+    el("timerLabel").textContent = blitzSeconds + "s";
+    el("timerLabel").style.color  = blitzSeconds <= 10 ? "var(--red)" : "var(--muted)";
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Score UI
+  // ─────────────────────────────────────────────────────────────────
+  function updateScoreUI(){
+    el("scorePts").textContent = Math.max(0, scores.correct);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Fact loading
+  // ─────────────────────────────────────────────────────────────────
+  function loadFact(){
+    answered = false;
+    bluffPending    = false;
+    bluffUserAnswer = null;
+    bluffChoice     = null;
+    el("bluffRow").style.display = "none";
+    el("bluffYes").disabled = false;
+    el("bluffNo").disabled  = false;
+    el("bluffYes").classList.remove("bluff-selected");
+    el("bluffNo").classList.remove("bluff-selected");
+    el("feedback").className = "feedback";
+    el("feedback").textContent = "";
+    el("hintText").className = "";
+    el("hintText").textContent = "";
+    el("btnTrue").disabled  = true;
+    el("btnFalse").disabled = true;
+    el("nextBtn").disabled  = true;
+    el("nextBtn").style.display = "";
+    el("hintBtn").disabled  = true;
+    el("hintBtn").style.display = "";
+    el("btnTrue").className  = "answer-btn";
+    el("btnFalse").className = "answer-btn";
+    el("factText").className = "loading";
+    el("factText").textContent = "Generating fact…";
+    el("catBadge").textContent = "…";
+
+    fetch("/api/facts",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ category: selectedCat })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error) throw new Error(data.error);
+      currentFact = data;
+      el("factText").className = "";
+      el("factText").textContent = data.text;
+      el("catBadge").textContent = catLabel(data.category);
+      el("btnTrue").disabled  = false;
+      el("btnFalse").disabled = false;
+      el("nextBtn").disabled  = false;
+      el("hintBtn").disabled  = false;
+    })
+    .catch(function(err){
+      el("factText").className = "loading";
+      el("factText").textContent = "Could not load a fact. Try again!";
+      el("nextBtn").disabled = false;
+      console.error(err);
+    });
+  }
+
+  function catLabel(cat){
+    return {science:"🔬 Science",history:"📜 History",animals:"🐾 Animals",space:"🚀 Space",food:"🍕 Food",random:"🎲 Fun Fact"}[cat]||"🎲 Fun Fact";
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Answer handling
+  // ─────────────────────────────────────────────────────────────────
+  function handleAnswer(userSaysTrue){
+    if(!currentFact || answered) return;
+    answered = true;
+    el("btnTrue").disabled  = true;
+    el("btnFalse").disabled = true;
+    el("hintBtn").disabled  = true;
+
+    if(selectedMode === "bluff"){
+      // Lock the answer and ask about bluffing before revealing result
+      bluffPending    = true;
+      bluffUserAnswer = userSaysTrue;
+      el("bluffRow").style.display = "block";
+      el("nextBtn").disabled = false;  // allow skipping bluff decision via Next
+      return;
+    }
+
+    var correct = (userSaysTrue === currentFact.isTrue);
+    processResult(correct, userSaysTrue, false, false);
+  }
+
+  function showBluffToast(text, type){
+    var badge = el("scoreBadge");
+    var old = badge.querySelector(".bluff-toast");
+    if(old) old.remove();
+    var t = document.createElement("span");
+    t.className = "bluff-toast " + type;
+    t.textContent = text;
+    badge.appendChild(t);
+    setTimeout(function(){ if(t.parentNode) t.remove(); }, 1700);
+  }
+
+  function handleBluffDecision(didBluff){
+    if(!bluffPending) return;
+    bluffPending = false;
+    bluffChoice  = null;
+    el("bluffRow").style.display = "none";
+    el("bluffYes").disabled = true;
+    el("bluffNo").disabled  = true;
+    el("bluffYes").classList.remove("bluff-selected");
+    el("bluffNo").classList.remove("bluff-selected");
+    el("nextBtn").disabled  = false;
+    var correct = (bluffUserAnswer === currentFact.isTrue);
+    if(didBluff){
+      if(correct){
+        showBluffToast("🎭 Bluff paid off! +2", "win");
+        stats.bluffWins = (stats.bluffWins || 0) + 1;
+        saveStats();
+      } else {
+        showBluffToast("🎭 Bluff failed! −1",  "lose");
+      }
+    }
+    processResult(correct, bluffUserAnswer, false, didBluff);
+  }
+
+  function processResult(correct, userSaysTrue, skipped, didBluff){
+    // Track streak for unlock checks
+    if(correct && !skipped){ gameStreak++; } else { gameStreak = 0; }
+    var bluffBonus = 0;
+    if(correct){
+      var points = (didBluff ? 2 : 1);
+      scores.correct += points;
+      bluffBonus = didBluff ? 2 : 0;
+      if(selectedMode === "blitz"){
+        blitzSeconds = Math.min(blitzSeconds + 2, 60);
+        updateTimerUI();
+        var fill = el("timerFill");
+        fill.classList.remove("flash");
+        void fill.offsetWidth;
+        fill.classList.add("flash");
+        setTimeout(function(){ fill.classList.remove("flash"); }, 650);
+        var tag = document.createElement("span");
+        tag.className = "plus-two";
+        tag.textContent = "+2s";
+        el("timerWrap").appendChild(tag);
+        setTimeout(function(){ tag.remove(); }, 900);
+      }
+      var blitzLabel = selectedMode==="blitz" ? " <span style='color:var(--green);font-size:0.85em'>+2s ⏱</span>" : "";
+      el("feedback").className = "feedback correct show";
+      el("feedback").innerHTML = "<strong>Correct!</strong>" + blitzLabel + " " + currentFact.explanation;
+      if(!skipped)(userSaysTrue ? el("btnTrue") : el("btnFalse")).classList.add("correct-pick");
+      playDing();
+      triggerCardAnim("anim-correct");
+    } else {
+      scores.wrong++;
+      if(didBluff){
+        // Lose a point for bluffing wrong (floor at 0)
+        scores.correct = Math.max(0, scores.correct - 1);
+      }
+      el("feedback").className = "feedback wrong show";
+      el("feedback").innerHTML = "<strong>" + (skipped?"Skipped!":"Wrong!") + "</strong> " + (currentFact.isTrue?"It was TRUE. ":"It was FALSE. ") + currentFact.explanation;
+      if(!skipped)(userSaysTrue ? el("btnTrue") : el("btnFalse")).classList.add("wrong-pick");
+      (currentFact.isTrue ? el("btnTrue") : el("btnFalse")).classList.add("reveal-correct");
+      playBuzz();
+      triggerCardAnim("anim-wrong");
+    }
+    updateScoreUI();
+
+    // Mode-specific post-answer logic
+    if(selectedMode === "sudden" && !correct){
+      loseHeart(function(){
+        if(suddenLives <= 0) setTimeout(showEndScreen, 400);
+      });
+      if(suddenLives > 0) return;
+      return;
+    }
+
+    if(skipped){
+      setTimeout(loadFact, 1200);
+    }
+  }
+
+  el("btnTrue").addEventListener("click",  function(){ handleAnswer(true);  });
+  el("btnFalse").addEventListener("click", function(){ handleAnswer(false); });
+  el("bluffYes").addEventListener("click", function(){
+    bluffChoice = true;
+    el("bluffYes").classList.add("bluff-selected");
+    el("bluffNo").classList.remove("bluff-selected");
+  });
+  el("bluffNo").addEventListener("click", function(){
+    bluffChoice = false;
+    el("bluffNo").classList.add("bluff-selected");
+    el("bluffYes").classList.remove("bluff-selected");
+  });
+
+  el("nextBtn").addEventListener("click", function(){
+    if(bluffPending){
+      // Finalise with chosen option (default Play Safe if nothing selected)
+      handleBluffDecision(bluffChoice === true);
+      return;
+    }
+    if(currentFact && !answered){
+      answered = true;
+      el("btnTrue").disabled  = true;
+      el("btnFalse").disabled = true;
+      el("hintBtn").disabled  = true;
+      processResult(false, null, true);
+    } else {
+      loadFact();
+    }
+  });
+
+  el("hintBtn").addEventListener("click", function(){
+    if(!currentFact) return;
+    el("hintText").textContent = currentFact.hint;
+    el("hintText").className = "visible";
+    el("hintBtn").disabled = true;
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────
+  // Sudden Death hearts
+  // ─────────────────────────────────────────────────────────────────
+  function buildHearts(){
+    var container = el("heartsDisplay");
+    container.innerHTML = "";
+    for(var i = 0; i < 3; i++){
+      var s = document.createElement("span");
+      s.className = "heart";
+      s.id = "heart" + i;
+      s.textContent = "❤️";
+      container.appendChild(s);
+    }
+  }
+
+  function loseHeart(callback){
+    suddenLives--;
+    var idx = suddenLives; // the heart to break (0-indexed from left)
+    var h = el("heart" + idx);
+    if(!h){ if(callback) callback(); return; }
+    h.textContent = "💔";
+    h.classList.add("breaking");
+    setTimeout(function(){
+      h.classList.remove("breaking");
+      h.classList.add("fading");
+      setTimeout(function(){
+        h.style.visibility = "hidden";
+        if(callback) callback();
+      }, 750);
+    }, 350);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Chat sidebar
+  // ─────────────────────────────────────────────────────────────────
+  var chatHistory = [];
+  var sidebar     = el("chatSidebar");
+  var sidebarMsgs = el("sidebarMessages");
+
+  el("chatFab").addEventListener("click", function(){
+    sidebar.classList.add("open");
+    document.body.classList.add("sidebar-open");
+    el("sidebarInput").focus();
+  });
+  el("closeSidebar").addEventListener("click", function(){
+    sidebar.classList.remove("open");
+    document.body.classList.remove("sidebar-open");
+  });
+
+  function addSMsg(role, html, typing){
+    var d = document.createElement("div");
+    d.className = "smsg " + role + (typing?" typing":"");
+    d.innerHTML = html;
+    sidebarMsgs.appendChild(d);
+    sidebarMsgs.scrollTop = sidebarMsgs.scrollHeight;
+    return d;
+  }
+
+  function sendSidebarMsg(){
+    var text = el("sidebarInput").value.trim();
+    if(!text) return;
+    addSMsg("user", escHtml(text));
+    el("sidebarInput").value = "";
+    el("sidebarSend").disabled = true;
+    var typingEl = addSMsg("bot",'<div class="dots"><span></span><span></span><span></span></div>',true);
+    var modeNames = {classic:"Classic (endless)",blitz:"Blitz (60 seconds)",sudden:"Sudden Death",bluff:"Bluff Challenge (after answering, bet on yourself for +2 or risk −1)"};
+    var gameState = "Game mode: " + (modeNames[selectedMode]||selectedMode) + ". ";
+    gameState += "Category: " + selectedCat + ". ";
+    gameState += "Score — correct: " + scores.correct + ", wrong: " + scores.wrong + ". ";
+    if(selectedMode==="blitz")  gameState += "Time remaining: " + blitzSeconds + "s. ";
+    if(selectedMode==="bluff") gameState += "Note: after each answer the player can bet on themselves (Bluff it! = +2 if right, −1 if wrong) or play safe (+1 if right). ";
+    if(answered && currentFact) gameState += "The player has already answered this question. ";
+    var factCtx = currentFact
+      ? answered
+        ? ("Current fact: \""+currentFact.text+"\". It is "+(currentFact.isTrue?"TRUE":"FALSE")+". Explanation: "+currentFact.explanation+". Category: "+currentFact.category+". The player has already answered.")
+        : ("Current fact: \""+currentFact.text+"\". Category: "+currentFact.category+". The player has NOT answered yet — do NOT reveal or hint at whether it is true or false.")
+      : "No fact is loaded yet.";
+    var ctx = gameState + factCtx;
+    chatHistory.push({role:"user",content:text});
+    fetch("/api/facts-chat",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message:text,factContext:ctx,history:chatHistory.slice(-8)})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      typingEl.remove();
+      var reply = d.reply||"Sorry, I had trouble with that.";
+      chatHistory.push({role:"assistant",content:reply});
+      addSMsg("bot", escHtml(reply));
+    })
+    .catch(function(){ typingEl.remove(); addSMsg("bot","Network error — try again."); })
+    .finally(function(){ el("sidebarSend").disabled=false; el("sidebarInput").focus(); });
+  }
+
+  el("sidebarSend").addEventListener("click", sendSidebarMsg);
+  el("sidebarInput").addEventListener("keydown", function(e){ if(e.key==="Enter") sendSidebarMsg(); });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Auth & Profile
+  // ─────────────────────────────────────────────────────────────────
+  var BASE_AVATARS   = ["🦊","🐼","🐨","🐯","🦁","🐸","🐧","🦋","🐬","🦄","🐉","👽","🤖","🦸","🐙","🦑"];
+  var LOCKED_AVATARS = [
+    // ── Easy ──
+    "🍕","🎲","🎮","🌙",
+    // ── Medium ──
+    "🚀","🏆","🎪","🧪",
+    // ── Hard ──
+    "🎯","🔥","⚡","💎","🎰","💀",
+    // ── Very Hard ──
+    "🧠","🌋","🔮",
+    // ── Legendary ──
+    "🌌","⚔️","👑"
+  ];
+  var ALL_AVATARS    = BASE_AVATARS.concat(LOCKED_AVATARS);
+
+  var UNLOCK_CONDS = {
+    // Easy
+    "🍕": { title:"Food Lover",      hint:"Play a game in the Food category." },
+    "🎲": { title:"Random Fan",      hint:"Play a game in the Fun Fact category." },
+    "🎮": { title:"Gamer",           hint:"Play 10 games total." },
+    "🌙": { title:"Explorer",        hint:"Play in all 6 categories." },
+    // Medium
+    "🚀": { title:"Space Explorer",  hint:"Get 20 correct answers in the Space category." },
+    "🏆": { title:"Champion",        hint:"Save a score to the leaderboard." },
+    "🎪": { title:"All-Rounder",     hint:"Play at least one game in every game mode." },
+    "🧪": { title:"Scientist",       hint:"Get 30 correct answers in the Science category." },
+    // Hard
+    "🎯": { title:"Sharpshooter",    hint:"Finish a game with 100% accuracy (min 10 questions)." },
+    "🔥": { title:"On Fire",         hint:"Get 15 correct answers in a row in one game." },
+    "⚡": { title:"Blitz Master",    hint:"Score 25+ correct in a single Blitz game." },
+    "💎": { title:"Diamond",         hint:"Accumulate 200 correct answers across all games." },
+    "🎰": { title:"High Roller",     hint:"Win a Bluff bet 25 times total." },
+    "💀": { title:"Skull",           hint:"Survive Sudden Death with all 3 hearts and 15+ correct." },
+    // Very Hard
+    "🧠": { title:"Big Brain",       hint:"Earn 100% accuracy in 3 separate games (min 10 questions each)." },
+    "🌋": { title:"Volcano",         hint:"Accumulate 500 correct answers across all games." },
+    "🔮": { title:"Oracle",          hint:"Get 25 correct answers in a row in a single game." },
+    // Legendary
+    "🌌": { title:"Galaxy",          hint:"Accumulate 1,000 correct answers across all games." },
+    "⚔️": { title:"Legend",          hint:"Get 100 correct answers in a row in a single game." },
+    "👑": { title:"Royalty",         hint:"Unlock every other avatar." }
+  };
+
+  // ── Stats tracking ─────────────────────────────────────────────
+  var stats = JSON.parse(localStorage.getItem("fof_stats") || "{}");
+  // fields: gamesPlayed, totalCorrect, categoriesPlayed[], modesPlayed[], spaceCorrect, scienceCorrect, bestBlitz, bestStreak, bestAcc, bestAccTotal, perfectGames, bluffWins, sdPerfectWin, savedToLeaderboard
+
+  function saveStats(){ localStorage.setItem("fof_stats", JSON.stringify(stats)); }
+
+  function isUnlocked(em){
+    if(BASE_AVATARS.indexOf(em) >= 0) return true;
+    var unlocked = JSON.parse(localStorage.getItem("fof_unlocked") || "[]");
+    return unlocked.indexOf(em) >= 0;
+  }
+
+  function checkAndGrantUnlocks(){
+    var unlocked = JSON.parse(localStorage.getItem("fof_unlocked") || "[]");
+    var newOnes = [];
+    var checks = {
+      // Easy
+      "🍕": (stats.categoriesPlayed||[]).indexOf("food")    >= 0,
+      "🎲": (stats.categoriesPlayed||[]).indexOf("random")  >= 0,
+      "🎮": (stats.gamesPlayed||0)      >= 10,
+      "🌙": (stats.categoriesPlayed||[]).length >= 6,
+      // Medium
+      "🚀": (stats.spaceCorrect||0)     >= 20,
+      "🏆": !!stats.savedToLeaderboard,
+      "🎪": (stats.modesPlayed||[]).length >= 4,
+      "🧪": (stats.scienceCorrect||0)   >= 30,
+      // Hard
+      "🎯": (stats.bestAcc||0)          >= 100 && (stats.bestAccTotal||0) >= 10,
+      "🔥": (stats.bestStreak||0)       >= 15,
+      "⚡": (stats.bestBlitz||0)        >= 25,
+      "💎": (stats.totalCorrect||0)     >= 200,
+      "🎰": (stats.bluffWins||0)        >= 25,
+      "💀": !!(stats.sdPerfectWin),
+      // Very Hard
+      "🧠": (stats.perfectGames||0)     >= 3,
+      "🌋": (stats.totalCorrect||0)     >= 500,
+      "🔮": (stats.bestStreak||0)       >= 25,
+      // Legendary
+      "🌌": (stats.totalCorrect||0)     >= 1000,
+      "⚔️": (stats.bestStreak||0)       >= 100
+    };
+    // 👑 requires all others
+    checks["👑"] = LOCKED_AVATARS.slice(0,-1).every(function(a){ return checks[a] || unlocked.indexOf(a) >= 0; });
+
+    LOCKED_AVATARS.forEach(function(em){
+      if(checks[em] && unlocked.indexOf(em) < 0){
+        unlocked.push(em);
+        newOnes.push(em);
+      }
+    });
+    if(newOnes.length){
+      localStorage.setItem("fof_unlocked", JSON.stringify(unlocked));
+      newOnes.forEach(function(em){
+        setTimeout(function(){ showUnlockToast(em); }, 600);
+      });
+    }
+  }
+
+  function showUnlockToast(em){
+    var t = document.createElement("div");
+    t.className = "unlock-toast";
+    t.innerHTML = "<span class='unlock-em'>"+em+"</span><div><strong>New avatar unlocked!</strong><div class='unlock-name'>"+UNLOCK_CONDS[em].title+"</div></div>";
+    document.body.appendChild(t);
+    setTimeout(function(){ t.classList.add("show"); }, 30);
+    setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 400); }, 3500);
+  }
+
+  // Streak tracking (reset per game)
+  var gameStreak = 0;
+
+  // ── Theme ──────────────────────────────────────────────────────────
+  function applyTheme(theme){
+    document.body.classList.toggle("light-mode", theme === "light");
+    document.querySelectorAll(".theme-opt").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.theme === theme);
+    });
+    localStorage.setItem("fof_theme", theme);
+  }
+  applyTheme(localStorage.getItem("fof_theme") || "dark");
+  document.addEventListener("click", function(e){
+    var btn = e.target.closest(".theme-opt");
+    if(!btn) return;
+    applyTheme(btn.dataset.theme);
+  });
+
+  // Current logged-in user (null = guest)
+  var currentUser = null;  // { username, avatar, token }
+
+  function getToken(){ return localStorage.getItem("fof_token"); }
+  function setToken(t){ localStorage.setItem("fof_token", t); }
+  function clearToken(){ localStorage.removeItem("fof_token"); }
+
+  function updateMenuProfile(){
+    if(currentUser){
+      el("menuAvatar").textContent = currentUser.avatar;
+      el("menuName").textContent   = currentUser.username;
+    } else {
+      el("menuAvatar").textContent = "🙂";
+      el("menuName").textContent   = "Sign In";
+    }
+  }
+
+  // Build emoji grid helper (used in both sign-up and profile panes)
+  function buildEmojiGrid(containerId, getSelected, setSelected){
+    var container = el(containerId);
+    container.innerHTML = "";
+
+    // Section: Base
+    var baseLabel = document.createElement("div");
+    baseLabel.className = "avatar-section-label";
+    baseLabel.textContent = "Base";
+    container.appendChild(baseLabel);
+    var baseGrid = document.createElement("div");
+    baseGrid.className = "emoji-grid-inner";
+    container.appendChild(baseGrid);
+
+    // Section: Unlockable
+    var lockLabel = document.createElement("div");
+    lockLabel.className = "avatar-section-label";
+    lockLabel.textContent = "Unlockable";
+    container.appendChild(lockLabel);
+    var lockGrid = document.createElement("div");
+    lockGrid.className = "emoji-grid-inner";
+    container.appendChild(lockGrid);
+
+    ALL_AVATARS.forEach(function(em){
+      var locked = !isUnlocked(em);
+      var d = document.createElement("div");
+      d.className = "emoji-opt" + (locked ? " locked" : "") + (em === getSelected() ? " selected" : "");
+      var inner = document.createElement("span");
+      inner.className = "emoji-inner";
+      inner.textContent = em;
+      d.appendChild(inner);
+      if(locked){
+        var lk = document.createElement("span");
+        lk.className = "lock-icon";
+        lk.textContent = "🔒";
+        d.appendChild(lk);
+      } else {
+        d.addEventListener("click", function(){
+          container.querySelectorAll(".emoji-opt").forEach(function(x){ x.classList.remove("selected"); });
+          d.classList.add("selected");
+          setSelected(em);
+        });
+      }
+      // Show hover tip for all unlockable avatars (locked or earned)
+      if(UNLOCK_CONDS[em]){
+        d.addEventListener("mouseenter", function(){ showAvatarTip(d, em, locked); });
+        d.addEventListener("mouseleave", hideAvatarTip);
+      }
+      if(BASE_AVATARS.indexOf(em) >= 0) baseGrid.appendChild(d);
+      else lockGrid.appendChild(d);
+    });
+  }
+
+  var _avatarTipEl = null;
+  function showAvatarTip(anchor, em, isLocked){
+    hideAvatarTip();
+    var cond = UNLOCK_CONDS[em];
+    var tip = document.createElement("div");
+    tip.className = "lock-tip";
+    if(isLocked){
+      tip.innerHTML = "<strong>🔒 "+cond.title+"</strong><br>"+cond.hint;
+    } else {
+      tip.innerHTML = "<strong>✅ "+cond.title+"</strong><br><span style='opacity:.75;font-size:.85em;'>Earned: </span>"+cond.hint;
+    }
+    document.body.appendChild(tip);
+    _avatarTipEl = tip;
+    var rect = anchor.getBoundingClientRect();
+    tip.style.top  = (rect.bottom + window.scrollY + 6) + "px";
+    tip.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 240) + "px";
+    setTimeout(function(){ if(tip === _avatarTipEl) tip.classList.add("show"); }, 10);
+  }
+  function hideAvatarTip(){
+    var tip = _avatarTipEl;
+    _avatarTipEl = null;
+    if(tip){ tip.classList.remove("show"); setTimeout(function(){ if(tip.parentNode) tip.remove(); }, 250); }
+  }
+
+  var suAvatarChoice = BASE_AVATARS[0];
+  var profileAvatarChoice = BASE_AVATARS[0];
+
+  buildEmojiGrid("emojiGridSignUp",
+    function(){ return suAvatarChoice; },
+    function(v){ suAvatarChoice = v; }
+  );
+
+  function openModal(id){ el(id).classList.add("open"); }
+  function closeModal(id){ el(id).classList.remove("open"); }
+
+  // ── Tab switching ──
+  el("tabSignIn").addEventListener("click", function(){
+    el("tabSignIn").classList.add("active");
+    el("tabSignUp").classList.remove("active");
+    el("signInPane").style.display = "";
+    el("signUpPane").style.display = "none";
+    el("siError").textContent = "";
+  });
+  el("tabSignUp").addEventListener("click", function(){
+    el("tabSignUp").classList.add("active");
+    el("tabSignIn").classList.remove("active");
+    el("signUpPane").style.display = "";
+    el("signInPane").style.display = "none";
+    el("suError").textContent = "";
+  });
+
+  // ── Open profile modal ──
+  el("profileBtn").addEventListener("click", function(){
+    if(currentUser){
+      // Show logged-in profile view
+      el("profileViewTitle").textContent = currentUser.avatar + " " + currentUser.username;
+      profileAvatarChoice = currentUser.avatar;
+      buildEmojiGrid("emojiGridProfile",
+        function(){ return profileAvatarChoice; },
+        function(v){ profileAvatarChoice = v; }
+      );
+      el("authView").style.display    = "none";
+      el("profileView").style.display = "";
+    } else {
+      // Show sign in / sign up
+      el("authView").style.display    = "";
+      el("profileView").style.display = "none";
+      el("siError").textContent = "";
+      el("suError").textContent = "";
+      el("siUsername").value = "";
+      el("siPassword").value = "";
+    }
+    openModal("profileModal");
+  });
+  el("closeProfile").addEventListener("click", function(){ closeModal("profileModal"); });
+  el("profileModal").addEventListener("click", function(e){ if(e.target===this) closeModal("profileModal"); });
+
+  // ── Sign In ──
+  el("signInBtn").addEventListener("click", function(){
+    var username = el("siUsername").value.trim();
+    var password = el("siPassword").value;
+    if(!username || !password){ el("siError").textContent = "Enter username and password."; return; }
+    el("signInBtn").disabled = true;
+    el("signInBtn").textContent = "Logging in…";
+    fetch("/api/auth/login", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ username, password })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){ el("siError").textContent = data.error; return; }
+      setToken(data.token);
+      currentUser = { username: data.username, avatar: data.avatar, token: data.token };
+      updateMenuProfile();
+      closeModal("profileModal");
+    })
+    .catch(function(){ el("siError").textContent = "Network error — try again."; })
+    .finally(function(){ el("signInBtn").disabled = false; el("signInBtn").textContent = "Log In"; });
+  });
+
+  // ── Sign Up ──
+  el("signUpBtn").addEventListener("click", function(){
+    var username = el("suUsername").value.trim();
+    var password = el("suPassword").value;
+    var confirm  = el("suConfirm").value;
+    el("suError").textContent = "";
+    if(!username){ el("suError").textContent = "Choose a username."; return; }
+    if(username.length < 2){ el("suError").textContent = "Username must be at least 2 characters."; return; }
+    if(!password){ el("suError").textContent = "Choose a password."; return; }
+    if(password.length < 4){ el("suError").textContent = "Password must be at least 4 characters."; return; }
+    if(password !== confirm){ el("suError").textContent = "Passwords do not match."; return; }
+    el("signUpBtn").disabled = true;
+    el("signUpBtn").textContent = "Creating…";
+    fetch("/api/auth/register", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ username, password, avatar: suAvatarChoice })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){ el("suError").textContent = data.error; return; }
+      setToken(data.token);
+      currentUser = { username: data.username, avatar: data.avatar, token: data.token };
+      updateMenuProfile();
+      closeModal("profileModal");
+    })
+    .catch(function(){ el("suError").textContent = "Network error — try again."; })
+    .finally(function(){ el("signUpBtn").disabled = false; el("signUpBtn").textContent = "Create Account"; });
+  });
+
+  // ── Save avatar (logged-in) ──
+  el("saveAvatarBtn").addEventListener("click", function(){
+    if(!currentUser) return;
+    el("saveAvatarBtn").disabled = true;
+    el("saveAvatarBtn").textContent = "Saving…";
+    fetch("/api/auth/avatar", {
+      method: "PATCH", headers: {"Content-Type":"application/json", "Authorization":"Bearer "+currentUser.token},
+      body: JSON.stringify({ avatar: profileAvatarChoice })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.token){
+        setToken(data.token);
+        currentUser.avatar = data.avatar;
+        currentUser.token  = data.token;
+        updateMenuProfile();
+        el("profileViewTitle").textContent = currentUser.avatar + " " + currentUser.username;
+        // Refresh leaderboard so new avatar shows immediately
+        if(document.getElementById("lbModal").classList.contains("open")) renderLeaderboard();
+      }
+      closeModal("profileModal");
+    })
+    .catch(function(){})
+    .finally(function(){ el("saveAvatarBtn").disabled = false; el("saveAvatarBtn").textContent = "Save Avatar"; });
+  });
+
+  // ── Log Out ──
+  el("logoutBtn").addEventListener("click", function(){
+    clearToken();
+    currentUser = null;
+    updateMenuProfile();
+    closeModal("profileModal");
+  });
+
+  // ── Restore session on page load ──
+  (function(){
+    var token = getToken();
+    if(!token) return;
+    fetch("/api/auth/me", { headers: {"Authorization":"Bearer "+token} })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data.username){
+          currentUser = { username: data.username, avatar: data.avatar, token: token };
+          updateMenuProfile();
+        } else {
+          clearToken();
+        }
+      })
+      .catch(function(){ /* stay as guest */ });
+  })();
+
+  updateMenuProfile();
+
+  // ─────────────────────────────────────────────────────────────────
+  // Leaderboard
+  // ─────────────────────────────────────────────────────────────────
+  var lbMode = "all";
+
+  function saveScore(){
+    if(!currentUser) return;  // guests don't save to leaderboard
+    var total = scores.correct + scores.wrong;
+    var acc   = total > 0 ? Math.round(scores.correct / total * 100) : 0;
+    fetch("/api/leaderboard/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + currentUser.token
+      },
+      body: JSON.stringify({
+        mode:    selectedMode,
+        correct: scores.correct,
+        wrong:   scores.wrong,
+        acc:     acc
+      })
+    }).then(function(r){ return r.json(); })
+    .then(function(){ stats.savedToLeaderboard = true; saveStats(); checkAndGrantUnlocks(); })
+    .catch(function(e){ console.error("score save failed", e); });
+  }
+
+  function renderLeaderboard(){
+    var list = el("lbList");
+    list.innerHTML = '<div class="lb-empty">Loading…</div>';
+    var url = "/api/leaderboard" + (lbMode !== "all" ? "?mode=" + lbMode : "");
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(lb){
+        list.innerHTML = "";
+        if(!lb.length){
+          list.innerHTML = '<div class="lb-empty">No scores yet — play a game first!</div>';
+          return;
+        }
+        var modeLabels = {classic:"Classic",blitz:"Blitz",sudden:"Sudden Death",bluff:"Bluff"};
+        var modeIcons  = {classic:"♾️",blitz:"⚡",sudden:"💀",bluff:"🎭"};
+        lb.slice(0, 20).forEach(function(entry, i){
+          var rankClass = i===0?"gold":i===1?"silver":i===2?"bronze":"";
+          var rankText  = i===0?"🥇":i===1?"🥈":i===2?"🥉":"#"+(i+1);
+          var date = entry.created_at ? entry.created_at.slice(0,10) : "";
+          var modeBadge = lbMode==="all"
+            ? '<span class="lb-mode-badge">'+(modeIcons[entry.mode]||"")+" "+(modeLabels[entry.mode]||entry.mode)+'</span>'
+            : "";
+          // Always show the live avatar for the logged-in user's own entries
+          var displayAvatar = (currentUser && entry.name === currentUser.username)
+            ? currentUser.avatar
+            : entry.avatar;
+          var row = document.createElement("div");
+          row.className = "lb-row";
+          row.innerHTML =
+            '<div class="lb-rank '+rankClass+'">'+rankText+'</div>'+
+            '<div class="lb-avatar">'+displayAvatar+'</div>'+
+            '<div class="lb-info">'+
+              '<div class="lb-pname">'+escHtml(entry.name)+modeBadge+'</div>'+
+              '<div class="lb-meta">'+entry.acc+'% acc · '+date+'</div>'+
+            '</div>'+
+            '<div class="lb-score">'+entry.correct+' ✓</div>';
+          list.appendChild(row);
+        });
+      })
+      .catch(function(){ list.innerHTML = '<div class="lb-empty">Could not load scores.</div>'; });
+  }
+
+  el("lbOpenBtn").addEventListener("click", function(){ renderLeaderboard(); openModal("lbModal"); });
+  el("closeLb").addEventListener("click",   function(){ closeModal("lbModal"); });
+  el("lbModal").addEventListener("click",   function(e){ if(e.target===this) closeModal("lbModal"); });
+
+  el("lbTabs").addEventListener("click", function(e){
+    var tab = e.target.closest(".lb-tab");
+    if(!tab) return;
+    document.querySelectorAll(".lb-tab").forEach(function(t){ t.classList.remove("active"); });
+    tab.classList.add("active");
+    lbMode = tab.dataset.lbmode;
+    renderLeaderboard();
+  });
+
+  // Save score when end screen is shown
+  var _origShowEnd = showEndScreen;
+  showEndScreen = function(){
+    saveScore();
+    _origShowEnd();
+  };
+  </script>
+</body>
+</html>
