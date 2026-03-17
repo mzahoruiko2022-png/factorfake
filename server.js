@@ -30,6 +30,7 @@ const GRADE_AGES = {
 };
 
 app.use(express.json());
+app.get('/', (req, res) => res.redirect('/facts.html'));
 app.use(express.static(__dirname));
 
 app.post('/api/chat', async (req, res) => {
