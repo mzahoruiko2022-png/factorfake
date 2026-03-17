@@ -170,7 +170,10 @@ Respond with ONLY raw JSON, no markdown:
   res.json(fact);
 });
 
-CATEGORIES.forEach(cat => generateBatch(cat).then(() => refillQueue(cat)));
+// Pre-warm only for local dev (serverless cold start would fire 6 parallel AI calls and freeze)
+if (!process.env.VERCEL) {
+  CATEGORIES.forEach(cat => generateBatch(cat).then(() => refillQueue(cat)));
+}
 
 app.post('/api/facts-chat', async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;

@@ -1005,12 +1005,18 @@
     el("factText").textContent = "Generating fact…";
     el("catBadge").textContent = "…";
 
+    var timeout = setTimeout(function(){
+      if(el("factText").textContent.indexOf("Generating")>=0){
+        el("factText").textContent = "Taking longer than usual… (server may be waking up)";
+      }
+    }, 8000);
     fetch("/api/facts",{
       method:"POST", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({ category: selectedCat })
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
+      clearTimeout(timeout);
       if(data.error) throw new Error(data.error);
       currentFact = data;
       el("factText").className = "";
@@ -1022,6 +1028,7 @@
       el("hintBtn").disabled  = false;
     })
     .catch(function(err){
+      clearTimeout(timeout);
       el("factText").className = "loading";
       el("factText").textContent = "Could not load a fact. Try again!";
       el("nextBtn").disabled = false;
