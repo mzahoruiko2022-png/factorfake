@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPS — Shoot the Bots</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="fps.css">
+</head>
+<body>
+  <div id="game-container">
+
+    <div id="start-screen">
+      <div id="ss-scanlines"></div>
+      <div id="ss-grid"></div>
+
+      <div id="ss-content">
+        <div id="ss-eyebrow">TACTICAL ELIMINATION SIM</div>
+        <h1 id="ss-title">
+          <span class="title-bot">BOT</span>
+          <span class="title-hunt">HUNT</span>
+        </h1>
+        <div id="ss-tagline">5 waves &nbsp;·&nbsp; 3 enemy types &nbsp;·&nbsp; 9 weapons &nbsp;·&nbsp; survive or die</div>
+
+        <div id="ss-controls">
+          <div class="ctrl-group">
+            <div class="ctrl-group-title">MOVE</div>
+            <div class="ctrl-row"><div class="ctrl-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div><span>Walk</span></div>
+            <div class="ctrl-row"><div class="ctrl-keys"><kbd>SPACE</kbd></div><span>Jump</span></div>
+          </div>
+          <div class="ctrl-divider"></div>
+          <div class="ctrl-group">
+            <div class="ctrl-group-title">COMBAT</div>
+            <div class="ctrl-row"><div class="ctrl-keys"><kbd>LMB</kbd></div><span>Shoot</span></div>
+            <div class="ctrl-row"><div class="ctrl-keys"><kbd>R</kbd></div><span>Reload</span></div>
+              <div class="ctrl-row"><div class="ctrl-keys"><kbd>1–5</kbd></div><span>Switch Slot</span></div>
+              <div class="ctrl-row"><div class="ctrl-keys"><kbd>WALK OVER</kbd></div><span>Pick up loot</span></div>
+          </div>
+          <div class="ctrl-divider"></div>
+          <div class="ctrl-group">
+            <div class="ctrl-group-title">MISC</div>
+            <div class="ctrl-row"><div class="ctrl-keys"><kbd>MOUSE</kbd></div><span>Aim</span></div>
+            <div class="ctrl-row"><div class="ctrl-keys"><kbd>ESC</kbd></div><span>Unlock cursor</span></div>
+          </div>
+        </div>
+
+        <button id="start-btn">▶ &nbsp;START GAME</button>
+        <div id="ss-footer">9 WEAPONS · 5 WAVES · LOOT DROPS · 3 ENEMY TYPES</div>
+      </div>
+    </div>
+
+    <div id="hud">
+      <div id="hud-left">
+        <div id="health-bar"><div id="health-fill"></div></div>
+        <span id="health-text">100</span>
+      </div>
+      <div id="hud-center">
+        <span id="hud-wave">WAVE 1 / 5</span>
+        <span id="hud-enemies">0 LEFT</span>
+      </div>
+      <div id="hud-right">
+        <span id="hud-score-label">SCORE</span>
+        <span id="score">0</span>
+      </div>
+    </div>
+
+    <!-- Wave announcement overlay -->
+    <div id="wave-announce">
+      <div id="wa-wave">WAVE 1 / 5</div>
+      <div id="wa-title">ENGAGE!</div>
+      <div id="wa-sub">4 enemies — 4 GRUNT</div>
+    </div>
+
+    <!-- Heal flash overlay -->
+    <div id="heal-flash"></div>
+
+    <div id="weapon-hud">
+      <span id="weapon-name">PISTOL</span>
+      <span id="weapon-perk"></span>
+      <span id="weapon-down"></span>
+      <span id="ammo-text">12 / 12</span>
+    </div>
+
+    <div id="reload-bar-wrap">
+      <div id="reload-bar-label">RELOADING</div>
+      <div id="reload-bar-track"><div id="reload-bar-fill"></div></div>
+    </div>
+
+    <div id="spinup-bar" style="display:none">
+      <div id="spinup-label">SPINNING UP</div>
+      <div id="spinup-track"><div id="spinup-fill"></div></div>
+    </div>
+
+    <div id="crosshair" aria-hidden="true"></div>
+    <div id="damage-numbers"></div>
+
+    <!-- Inventory bar (Fortnite-style hotbar) -->
+    <div id="inv-bar">
+      <div class="inv-slot" data-slot="0"><span class="inv-num">1</span><div class="inv-icon"></div><span class="inv-name"></span><span class="inv-ammo"></span></div>
+      <div class="inv-slot" data-slot="1"><span class="inv-num">2</span><div class="inv-icon"></div><span class="inv-name"></span><span class="inv-ammo"></span></div>
+      <div class="inv-slot" data-slot="2"><span class="inv-num">3</span><div class="inv-icon"></div><span class="inv-name"></span><span class="inv-ammo"></span></div>
+      <div class="inv-slot" data-slot="3"><span class="inv-num">4</span><div class="inv-icon"></div><span class="inv-name"></span><span class="inv-ammo"></span></div>
+      <div class="inv-slot" data-slot="4"><span class="inv-num">5</span><div class="inv-icon"></div><span class="inv-name"></span><span class="inv-ammo"></span></div>
+    </div>
+
+    <!-- Pickup notification -->
+    <div id="pickup-flash" class="pickup-flash"></div>
+
+    <div id="game-over">
+      <h2>GAME OVER</h2>
+      <p id="final-score">Kills: 0  ·  Wave 1</p>
+      <p id="final-score-pts">Score: 0</p>
+      <button id="restart-btn">PLAY AGAIN</button>
+    </div>
+
+    <div id="win-screen">
+      <h2>ALL WAVES CLEARED!</h2>
+      <p>5 / 5 Waves Survived</p>
+      <p id="win-kills">Kills: 0</p>
+      <p id="win-score">Score: 0</p>
+      <button id="win-restart-btn">PLAY AGAIN</button>
+    </div>
+
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="fps.js"></script>
+</body>
+</html>

@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "chat": "node server.js"
+    "start": "node lib/server.js",
+    "chat": "node lib/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Don't Line Up — Misère + Traps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game">
+    <header class="header">
+      <h1>Don't Line Up</h1>
+      <p class="subtitle">First to get 3 in a row <em>loses</em> · Step on a trap, you <em>lose</em></p>
+      <label class="toggle">
+        <input type="checkbox" id="vsBot" />
+        <span>Play vs bot</span>
+      </label>
+      <div class="status" id="status">X to move</div>
+    </header>
+
+    <div class="board" id="board" aria-label="Game board">
+      <button type="button" class="cell" data-index="0" aria-label="Cell 0"></button>
+      <button type="button" class="cell" data-index="1" aria-label="Cell 1"></button>
+      <button type="button" class="cell" data-index="2" aria-label="Cell 2"></button>
+      <button type="button" class="cell" data-index="3" aria-label="Cell 3"></button>
+      <button type="button" class="cell" data-index="4" aria-label="Cell 4"></button>
+      <button type="button" class="cell" data-index="5" aria-label="Cell 5"></button>
+      <button type="button" class="cell" data-index="6" aria-label="Cell 6"></button>
+      <button type="button" class="cell" data-index="7" aria-label="Cell 7"></button>
+      <button type="button" class="cell" data-index="8" aria-label="Cell 8"></button>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="reset" id="reset">New game</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

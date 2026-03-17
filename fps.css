@@ -1,0 +1,740 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  overflow: hidden;
+  background: #b8d8f0;
+  font-family: 'Orbitron', monospace;
+  cursor: none;
+}
+
+body.show-cursor,
+body.show-cursor * {
+  cursor: default !important;
+}
+
+body.show-cursor button {
+  cursor: pointer !important;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#game-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Start Screen ──────────────────────────────────────────────────── */
+#start-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #10102a 0%, #06060f 100%);
+  z-index: 10;
+  color: #e0e0ff;
+  cursor: default;
+  overflow: hidden;
+}
+
+/* Animated scanlines */
+#ss-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.18) 3px,
+    rgba(0,0,0,0.18) 4px
+  );
+  z-index: 1;
+  animation: scanroll 12s linear infinite;
+}
+@keyframes scanroll {
+  from { background-position: 0 0; }
+  to   { background-position: 0 200px; }
+}
+
+/* Grid lines */
+#ss-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(60,80,180,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60,80,180,0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  z-index: 1;
+}
+
+#ss-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  max-width: 700px;
+  width: 90%;
+}
+
+/* Eye-brow line */
+#ss-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  color: #ff4422;
+  opacity: 0.85;
+  margin-bottom: 0.5rem;
+  animation: fadeSlideDown 0.6s ease both;
+}
+
+/* Title */
+#ss-title {
+  font-size: clamp(3.2rem, 11vw, 6.5rem);
+  font-weight: 900;
+  line-height: 0.9;
+  margin-bottom: 0.7rem;
+  animation: fadeSlideDown 0.6s 0.1s ease both;
+}
+
+.title-bot {
+  display: block;
+  color: #ffffff;
+  letter-spacing: 0.25em;
+  text-shadow:
+    0 0 20px rgba(160,180,255,0.6),
+    0 0 60px rgba(80,100,200,0.3);
+}
+
+.title-hunt {
+  display: block;
+  color: #ff3311;
+  letter-spacing: 0.25em;
+  text-shadow:
+    0 0 20px rgba(255,60,20,0.7),
+    0 0 60px rgba(200,30,0,0.4);
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { text-shadow: 0 0 20px rgba(255,60,20,0.7), 0 0 60px rgba(200,30,0,0.4); }
+  50%       { text-shadow: 0 0 35px rgba(255,80,30,0.9), 0 0 90px rgba(200,30,0,0.6); }
+}
+
+#ss-tagline {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: rgba(200,210,255,0.5);
+  margin-bottom: 2rem;
+  animation: fadeSlideDown 0.6s 0.2s ease both;
+}
+
+/* Controls grid */
+#ss-controls {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(80,100,180,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeSlideDown 0.6s 0.3s ease both;
+}
+
+.ctrl-group {
+  padding: 1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 150px;
+}
+
+.ctrl-group-title {
+  font-size: 0.55rem;
+  letter-spacing: 0.25em;
+  color: #ff4422;
+  margin-bottom: 0.15rem;
+}
+
+.ctrl-divider {
+  width: 1px;
+  background: rgba(80,100,180,0.2);
+  margin: 0.5rem 0;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ctrl-keys {
+  display: flex;
+  gap: 0.2rem;
+}
+
+kbd {
+  display: inline-block;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #ccd;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(150,160,220,0.3);
+  border-bottom: 2px solid rgba(150,160,220,0.5);
+  border-radius: 4px;
+  padding: 0.2rem 0.45rem;
+  white-space: nowrap;
+}
+
+.ctrl-row span {
+  font-size: 0.6rem;
+  color: rgba(180,190,230,0.65);
+  white-space: nowrap;
+}
+
+/* Start Button */
+#start-btn {
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 0.9rem 2.8rem;
+  background: linear-gradient(160deg, #c62020 0%, #7a0e0e 100%);
+  border: 2px solid #ff4422;
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  border-radius: 4px;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  box-shadow: 0 0 20px rgba(200,30,0,0.3);
+  animation: fadeSlideDown 0.6s 0.4s ease both;
+  margin-bottom: 1.2rem;
+}
+
+#start-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 40px rgba(255,60,20,0.55);
+  background: linear-gradient(160deg, #e02828 0%, #991111 100%);
+}
+
+#ss-footer {
+  font-size: 0.5rem;
+  letter-spacing: 0.25em;
+  color: rgba(150,160,200,0.3);
+  animation: fadeSlideDown 0.6s 0.5s ease both;
+}
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HUD top bar ──────────────────────────────────────────────────── */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 5;
+  pointer-events: none;
+}
+
+#hud-left { display: flex; align-items: center; gap: 0.7rem; }
+#hud-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+#hud-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+#health-bar {
+  width: 180px;
+  height: 18px;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #444;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#health-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #c44, #8b2222);
+  transition: width 0.2s;
+}
+
+#health-text {
+  font-size: 1rem;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0,0,0,0.8);
+}
+
+#hud-wave {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  color: #aaccff;
+  text-shadow: 0 0 10px rgba(100,160,255,0.7);
+}
+#hud-enemies {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: rgba(255,120,100,0.9);
+}
+#hud-score-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.45);
+}
+#score {
+  font-size: 1.1rem;
+  color: #ffe066;
+  text-shadow: 0 0 10px rgba(255,200,50,0.6);
+}
+
+/* Wave Announcement */
+#wave-announce {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+#wave-announce.visible { opacity: 1; }
+#wa-wave {
+  font-size: 1rem;
+  letter-spacing: 0.35em;
+  color: rgba(140,180,255,0.8);
+  margin-bottom: 0.5rem;
+}
+#wa-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(80,160,255,0.9), 0 0 80px rgba(80,160,255,0.4);
+  letter-spacing: 0.12em;
+  animation: waPulse 0.6s ease-out;
+}
+#wa-sub {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  color: rgba(200,220,255,0.65);
+  margin-top: 0.6rem;
+}
+@keyframes waPulse {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Heal flash */
+#heal-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 12;
+  background: radial-gradient(ellipse at center, rgba(0,255,120,0.22) 0%, transparent 70%);
+  opacity: 0;
+}
+#heal-flash.flash-active {
+  animation: healFlash 0.6s ease-out forwards;
+}
+@keyframes healFlash {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Weapon HUD (bottom-right) ───────────────────────────────────── */
+#weapon-hud {
+  position: fixed;
+  bottom: 1.6rem;
+  right: 1.6rem;
+  text-align: right;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#weapon-name {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8af;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 8px rgba(0,0,0,0.9);
+}
+
+#weapon-perk {
+  display: block;
+  font-size: 0.6rem;
+  color: #6f6;
+  margin-top: 0.2rem;
+}
+
+#weapon-down {
+  display: block;
+  font-size: 0.6rem;
+  color: #f66;
+  margin-top: 0.1rem;
+}
+
+#ammo-text {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #8af;
+  margin-top: 0.4rem;
+  letter-spacing: 0.08em;
+}
+
+/* ── Reload Bar ───────────────────────────────────────────────────── */
+#reload-bar-wrap {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.6rem;
+  width: 140px;
+  display: none;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#spinup-bar {
+  position: fixed;
+  bottom: 7.6rem;
+  right: 1.6rem;
+  width: 140px;
+  pointer-events: none;
+  z-index: 5;
+}
+#spinup-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  color: rgba(100, 220, 255, 0.9);
+  margin-bottom: 0.25rem;
+  text-align: right;
+}
+#spinup-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(80,200,255,0.3);
+}
+#spinup-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0088ff, #00ffee);
+  border-radius: 3px;
+  transition: width 0.05s linear;
+}
+
+#reload-bar-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  color: rgba(255,200,80,0.85);
+  margin-bottom: 0.25rem;
+  text-align: right;
+}
+
+#reload-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255,180,50,0.3);
+}
+
+#reload-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff8800, #ffcc00);
+  border-radius: 3px;
+  transition: width 0.05s linear;
+}
+
+/* ── Crosshair ───────────────────────────────────────────────────── */
+#crosshair {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  z-index: 8;
+}
+
+#crosshair::before,
+#crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 2px rgba(0,0,0,0.8);
+}
+
+#crosshair::before {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 24px;
+  margin-left: -1px;
+}
+
+#crosshair::after {
+  top: 50%;
+  left: 0;
+  width: 24px;
+  height: 2px;
+  margin-top: -1px;
+}
+
+/* ── Damage Popups ───────────────────────────────────────────────── */
+#damage-numbers {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.damage-popup {
+  position: absolute;
+  font-family: 'Orbitron', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: #ff4444;
+  text-shadow: 0 0 4px #000, 0 1px 2px #000;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: dmg-float 0.85s ease-out forwards;
+}
+
+@keyframes dmg-float {
+  0%   { opacity: 1; transform: translate(-50%, -50%) translateY(0)    scale(1);   }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateY(-44px) scale(1.3); }
+}
+
+/* ── Weapon Wheel ────────────────────────────────────────────────── */
+/* ── Inventory Bar (Fortnite-style hotbar) ───────────────────────── */
+#inv-bar {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.inv-slot {
+  width: 76px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 5px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: transform 0.1s, border-color 0.12s, box-shadow 0.12s, background 0.12s;
+  backdrop-filter: blur(4px);
+}
+
+.inv-slot.active {
+  border-color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-5px) scale(1.08);
+  box-shadow: 0 0 18px rgba(255,255,255,0.25), inset 0 0 8px rgba(255,255,255,0.05);
+}
+
+/* rarity border tints for active slot */
+.inv-slot.active[data-rarity="common"]    { border-color: #aaa; box-shadow: 0 0 14px #aaa4; }
+.inv-slot.active[data-rarity="uncommon"]  { border-color: #22cc55; box-shadow: 0 0 16px #22cc5566; }
+.inv-slot.active[data-rarity="rare"]      { border-color: #4488ff; box-shadow: 0 0 18px #4488ff66; }
+.inv-slot.active[data-rarity="epic"]      { border-color: #aa44ff; box-shadow: 0 0 20px #aa44ff77; }
+.inv-slot.active[data-rarity="legendary"] { border-color: #ff8c00; box-shadow: 0 0 22px #ff8c0088; }
+
+.inv-num {
+  font-size: 0.5rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.inv-icon {
+  width: 38px;
+  height: 26px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  transition: box-shadow 0.2s;
+}
+
+.inv-name {
+  font-size: 0.42rem;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 64px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-ammo {
+  font-size: 0.5rem;
+  color: rgba(200,220,255,0.75);
+  letter-spacing: 0.05em;
+}
+
+/* Loot drop labels */
+.drop-label {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-shadow: 0 1px 4px #000;
+}
+.dl-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.08em;
+}
+.dl-rarity {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.14em;
+}
+.drop-label.rarity-common    .dl-rarity { color: #aaa; }
+.drop-label.rarity-uncommon  .dl-rarity { color: #22cc55; }
+.drop-label.rarity-rare      .dl-rarity { color: #4488ff; }
+.drop-label.rarity-epic      .dl-rarity { color: #aa44ff; }
+.drop-label.rarity-legendary .dl-rarity { color: #ff8c00; }
+
+/* Pickup notification */
+.pickup-flash {
+  position: fixed;
+  left: 50%;
+  bottom: 8.5rem;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 9;
+}
+.pickup-flash.pfx-anim { animation: pfxRise 2s ease-out forwards; }
+.pickup-flash.rarity-common    { color: #ccc; }
+.pickup-flash.rarity-uncommon  { color: #22cc55; text-shadow: 0 0 12px #22cc5588; }
+.pickup-flash.rarity-rare      { color: #4488ff; text-shadow: 0 0 14px #4488ff88; }
+.pickup-flash.rarity-epic      { color: #cc66ff; text-shadow: 0 0 16px #aa44ff99; }
+.pickup-flash.rarity-legendary { color: #ff8c00; text-shadow: 0 0 18px #ff8c0099; }
+@keyframes pfxRise {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80%  { opacity: 1; transform: translateX(-50%) translateY(-28px); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-34px); }
+}
+
+/* ── Enemy HP Bars ───────────────────────────────────────────────── */
+.enemy-hp {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  width: 52px;
+  height: 7px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(0,0,0,0.9);
+  border-radius: 3px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.enemy-hp-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  transition: width 0.08s, background 0.2s;
+}
+
+/* ── End Screens ─────────────────────────────────────────────────── */
+#game-over,
+#win-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+  z-index: 15;
+  color: #fff;
+}
+
+#game-over h2 { color: #e44; }
+#win-screen h2 { color: #4e4; }
+
+#game-over h2,
+#win-screen h2 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+#game-over p,
+#win-screen p {
+  margin-bottom: 0.5rem;
+}
+#final-score-pts,
+#win-score {
+  font-size: 1.4rem;
+  color: #ffe066;
+  text-shadow: 0 0 14px rgba(255,200,50,0.6);
+  letter-spacing: 0.1em;
+}
+
+#restart-btn,
+#win-restart-btn {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.8rem 2rem;
+  margin-top: 1.5rem;
+  background: #333;
+  border: 2px solid #666;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+#restart-btn:hover,
+#win-restart-btn:hover {
+  background: #444;
+  border-color: #8af;
+}
+
+.hidden { display: none !important; }

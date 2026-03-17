@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generation Chatbot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="chat-page">
+  <div class="chatbot">
+    <header class="chatbot-header">
+      <div class="chatbot-title-row">
+        <h2>Generation Chatbot</h2>
+        <label class="theme-switch" title="Toggle light/dark">
+          <input type="checkbox" id="themeSwitch" aria-label="Light theme" />
+          <span class="theme-switch-slider"></span>
+          <span class="theme-switch-label">Light</span>
+        </label>
+      </div>
+      <p class="chatbot-subtitle">Pick a grade (1–12) and the bot will reply in that style.</p>
+    </header>
+
+    <div class="chatbot-options">
+      <label class="chatbot-label" for="userName">
+        Your name:
+        <input type="text" id="userName" name="userName" class="chatbot-name-input" placeholder="Your name" autocomplete="name" />
+      </label>
+      <label class="chatbot-label" for="personaSelect">
+        Grade:
+        <select id="personaSelect">
+          <option value="1">Grade 1</option>
+          <option value="2">Grade 2</option>
+          <option value="3">Grade 3</option>
+          <option value="4">Grade 4</option>
+          <option value="5">Grade 5</option>
+          <option value="6" selected>Grade 6</option>
+          <option value="7">Grade 7</option>
+          <option value="8">Grade 8</option>
+          <option value="9">Grade 9</option>
+          <option value="10">Grade 10</option>
+          <option value="11">Grade 11</option>
+          <option value="12">Grade 12</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="chat-window" id="chatWindow" aria-live="polite"></div>
+
+    <div class="chat-input-row">
+      <textarea
+        id="chatInput"
+        class="chat-input"
+        rows="4"
+        placeholder="Type a message…"
+        autocomplete="off"
+      ></textarea>
+      <button type="button" class="chat-send" id="chatSend">Send</button>
+    </div>
+  </div>
+
+  <script src="chat.js"></script>
+</body>
+</html>
+
